@@ -2,83 +2,158 @@ import django.urls
 import rest_framework.status
 import rest_framework.test
 
+from parameterized import parameterized
+
 import api.models
 
 
-def valid_create_test(self, url, data, model_class):
-    response = self.client.post(
-        url, data, format='json',
-    )
-    self.assertEqual(
-        response.status_code,
-        rest_framework.status.HTTP_201_CREATED,
-    )
-    self.assertEqual(
-        model_class.objects.count(), 1
-    )
-    
+class QuestionTestCase(rest_framework.test.APITestCase):
+    list_url = ''
+    test_data = {}
 
-def invalid_create_test(self, url, data, model_class):
-    response = self.client.post(
-        url, data, format='json',
-    )
-    self.assertEqual(
-        response.status_code,
-        rest_framework.status.HTTP_400_BAD_REQUEST,
-    )
-    self.assertEqual(
-        model_class.objects.count(), 0,
-    )
+    def get_test_data(self):
+        return self.test_data.copy()
+
+    def setUp(self):
+        self.form = api.models.Form.objects.create(title='test_form')
+
+    def valid_create_test(self, url, data, model_class):
+        response = self.client.post(
+            url, data, format='json',
+        )
+        self.assertEqual(
+            response.status_code,
+            rest_framework.status.HTTP_201_CREATED,
+        )
+        self.assertEqual(
+            model_class.objects.count(), 1
+        )
+        
+    def invalid_create_test(self, url, data, model_class):
+        response = self.client.post(
+            url, data, format='json',
+        )
+        self.assertEqual(
+            response.status_code,
+            rest_framework.status.HTTP_400_BAD_REQUEST,
+        )
+        self.assertEqual(
+            model_class.objects.count(), 0,
+        )
 
 
-class RadioQuestionTestCase(rest_framework.test.APITestCase):
+class TextQuestionTestCase(QuestionTestCase):
+    list_url = django.urls.reverse('text-question-list')
+    test_data = {
+        'question': 'test_question',
+        'order': 1,
+        'correct_answer': 'some_correct_answer',
+        'form': 1,
+    }
+
+    @parameterized.expand([
+        ('some_correct_answer', ),
+    ])
+    def test_valid_answer(self, correct_answer):
+        valid_data = self.get_test_data()
+        valid_data['correct_answer'] = correct_answer
+        self.valid_create_test(self.list_url, valid_data, api.models.TextQuestion)
+
+    @parameterized.expand([
+        ('', ),
+    ])
+    def test_invalid_answer(self, correct_answer):
+        invalid_data = self.get_test_data()
+        invalid_data['correct_answer'] = correct_answer
+        self.invalid_create_test(self.list_url, invalid_data, api.models.TextQuestion)
+
+# Since the RadioQuestion and the CheckboxQuestion inherit the list of choices from a single model,
+# we will provide tests on one of them, the RadioQuestion  
+class MultipleChoiceTestCase(QuestionTestCase):
     list_url = django.urls.reverse('radio-question-list')
+    test_data = {
+        'question': 'test_question',
+        'order': 1,
+        'choices_list_string': None,
+        "correct_answer": "choice_1",
+        "form": 1,
+    }
+
+    @parameterized.expand([
+        ('["choice_1", "choice_2"]', ),
+    ])
+    def test_valid_choices(self, choices):
+        valid_data = self.get_test_data()
+        valid_data['choices_list_string'] = choices
+        self.valid_create_test(self.list_url, valid_data, api.models.RadioQuestion)
+
+    @parameterized.expand([
+        ('', ),
+        ('[]', ),
+        ('[" "]', ),
+        ('["choice_1"]', ),
+        ('[" ", " "]', ), 
+    ])
+    def test_invalid_choices(self, choices):
+        invalid_data = self.get_test_data()
+        invalid_data['choices_list_string'] = choices
+        self.invalid_create_test(self.list_url, invalid_data, api.models.RadioQuestion)
+
+
+class RadioQuestionTestCase(QuestionTestCase):
+    list_url = django.urls.reverse('radio-question-list')
+    test_data = {
+        'question': 'test_question',
+        'order': 1,
+        'choices_list_string': '["choice_1", "choice_2"]',
+        "correct_answer": "choice_1",
+        "form": 1,
+    }
     
-    def setUp(self):
-        api.models.Form.objects.create(title='test_form')
+    @parameterized.expand([
+        ('choice_1', ),
+    ])
+    def test_valid_correct_answer(self, correct_answer):
+        valid_data = self.get_test_data()
+        valid_data['correct_answer'] = correct_answer
+        self.valid_create_test(self.list_url, valid_data, api.models.RadioQuestion)
 
-    def test_valid_correct_answer(self):
-        valid_data = {
-            'question': 'test_question',
-            'order': 1,
-            'choices_list_string': '["choice_1", "choice_2"]',
-            "correct_answer": "choice_1",
-            "form": 1,
-        }
-        valid_create_test(self.list_url, valid_data, api.models.RadioQuestion)
-
-    def test_invalid_correct_answer(self):
-        invalid_data = {
-            'question': 'test_question',
-            'order': 1,
-            'choices_list_string': '["choice_1", "choice_2"]',
-            "correct_answer": "choice_not_in_choices",
-            "form": 1,
-        }
-        invalid_create_test(self.list_url, invalid_data, api.models.RadioQuestion)
+    @parameterized.expand([
+        ('answer_not_in_choices', ),
+        ('["choice_1", "choice_2"]', ),
+    ])
+    def test_invalid_correct_answer(self, correct_answer):
+        invalid_data = self.get_test_data()
+        invalid_data['correct_answer'] = correct_answer
+        self.invalid_create_test(self.list_url, invalid_data, api.models.RadioQuestion)
 
 
-class CheckboxQuestionTestCase(rest_framework.test.APITestCase):
+class CheckboxQuestionTestCase(QuestionTestCase):
     list_url = django.urls.reverse('checkbox-question-list')
-
-    def setUp(self):
-        api.models.Form.objects.create(title='test_form')
-
-    def test_valid_correct_answers_1(self):
-        valid_data = {
-            'question': 'test_question',
-            'order': 1,
-            'choices_list_string': '["choice_1", "choice_2", "choice_3"]',
-            'correct_answers': '["choice_1"]',
-            'form': 1,
-        }
-        valid_create_test(self.list_url, valid_data, api.models.RadioQuestion)
+    test_data = {
+        'question': 'test_question',
+        'order': 1,
+        'choices_list_string': '["choice_1", "choice_2", "choice_3"]',
+        'correct_answers_string': '["choice_1", "choice_2"]',
+        'form': 1,
+    }
     
-    def test_invalid_correct_answers(self):
-        invalid_data = {
-            'question': 'test_question',
-            'order': 1,
-            'choices_list_string': '["choice_1", "choice_2"]',
-            "correct_answer": "choice_not_in_choices",
-            "form": 1,
-        }
+    @parameterized.expand([
+        ('["choice_1"]', ),
+        ('["choice_1", "choice_2"]', ),
+    ])
+    def test_valid_correct_answers(self, correct_answers):
+        valid_data = self.get_test_data()
+        valid_data['correct_answers_string'] = correct_answers
+        self.valid_create_test(self.list_url, valid_data, api.models.CheckboxQuestion)
+    
+    @parameterized.expand([
+        ('[]', ),
+        ('choice_1', ),
+        ('["answer_not_in_choices"]', ),
+        ('["choice_1", "choice_2", "answer_not_in_choices"]', ),
+    ])
+    def test_invalid_correct_answers(self, correct_answers):
+        invalid_data = self.get_test_data()
+        invalid_data['correct_answers_string'] = correct_answers
+        self.invalid_create_test(self.list_url, invalid_data, api.models.CheckboxQuestion)

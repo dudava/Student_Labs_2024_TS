@@ -6,7 +6,7 @@ import django.core.exceptions
 class Question(django.db.models.Model):
     question_type = ""
     question = django.db.models.CharField(max_length=200)
-    order = django.db.models.IntegerField(default=1)
+    order = django.db.models.PositiveIntegerField(default=1)
 
     def __str__(self):
         return f"{self.form.name}: {self.question}"
@@ -57,7 +57,7 @@ class Form(django.db.models.Model):
         return sorted(questions, key=lambda q: q.order)
         
     def __str__(self):
-        return self.name
+        return self.title
     
 
 class TextQuestion(Question):
