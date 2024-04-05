@@ -1,4 +1,6 @@
 import django.urls
+import django.contrib.auth.models
+import rest_framework.authtoken.models
 import rest_framework.status
 import rest_framework.test
 
@@ -15,7 +17,13 @@ class QuestionTestCase(rest_framework.test.APITestCase):
         return self.test_data.copy()
 
     def setUp(self):
-        self.form = api.models.Form.objects.create(title='test_form')
+        self.owner = django.contrib.auth.models.User.objects.create_user(
+            'test_user', 'test_user@mail.com', 'test_password'
+        )
+        self.client = rest_framework.test.APIClient()
+        self.client.force_authenticate(user=self.owner)
+        
+        self.form = api.models.Form.objects.create(title='test_form', owner=self.owner)
 
     def valid_create_test(self, url, data, model_class):
         response = self.client.post(

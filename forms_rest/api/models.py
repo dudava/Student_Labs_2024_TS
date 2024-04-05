@@ -9,7 +9,7 @@ class Question(django.db.models.Model):
     order = django.db.models.PositiveIntegerField(default=1)
 
     def __str__(self):
-        return f"{self.form.name}: {self.question}"
+        return f"{self.form.title}: {self.question}"
     
     class Meta:
         abstract = True
@@ -44,6 +44,7 @@ class MultipleChoicesQuestion(Question):
 class Form(django.db.models.Model):
     created = django.db.models.DateTimeField(auto_now_add=True)
     title = django.db.models.CharField(max_length=50)
+    owner = django.db.models.ForeignKey('auth.User', related_name='forms', on_delete=django.db.models.CASCADE)
 
     def get_ordered_questions_list(self):
         questions_related = [

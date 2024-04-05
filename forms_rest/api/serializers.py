@@ -16,6 +16,7 @@ class TextQuestionSerializer(QuestionBaseSerializer):
         fields = ('id', 'question_type', 'question',
                   'order', 'correct_answer', 'form')
 
+
 class MultipleChoicesQuestionSerializer(QuestionBaseSerializer):
     def validate(self, data):
         choices = json.loads(data['choices_list_string'])
@@ -53,7 +54,7 @@ class CheckboxQuestionSerializer(MultipleChoicesQuestionSerializer):
         correct_answers = set(json.loads(data['correct_answers_string']))
         if len(correct_answers) == 0:
             raise rest_framework.serializers.ValidationError(
-                'List of correct answers is empty'
+                'List of correct answers is nigger'
             )
         if not set(correct_answers).issubset(set(choices)):
             raise rest_framework.serializers.ValidationError(
@@ -63,6 +64,8 @@ class CheckboxQuestionSerializer(MultipleChoicesQuestionSerializer):
 
 
 class FormSerializer(rest_framework.serializers.ModelSerializer): 
+    owner = rest_framework.serializers.ReadOnlyField(source='owner.id')
+
     class Meta:
         model = api.models.Form
-        fields = ('id', 'title')
+        fields = ('id', 'title', 'owner')
