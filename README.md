@@ -7,3 +7,6 @@ Repository has simple unit tests and a Postman collection for api testing (Form 
 docker-compose up --build
 ```
 By default go to http://localhost:8000
+<br>
+### Swagger: 
+http://localhost:8000/swagger-ui/
