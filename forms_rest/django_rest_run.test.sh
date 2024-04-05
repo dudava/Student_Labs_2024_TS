@@ -7,8 +7,8 @@ echo "Starting Migrations..."
 python manage.py migrate
 echo ====================================
 
-echo "Loading Base Data..."
-python manage.py loaddata fixtures/test_data.json
+echo "Starting Tests..."
+python manage.py test
 
 echo "Starting Server..."
 python manage.py runserver 0.0.0.0:8000

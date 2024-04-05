@@ -14,7 +14,9 @@ class QuestionTestCase(rest_framework.test.APITestCase):
     test_data = {}
 
     def get_test_data(self):
-        return self.test_data.copy()
+        test_data = self.test_data.copy()
+        test_data['form'] = self.form.pk
+        return test_data
 
     def setUp(self):
         self.owner = django.contrib.auth.models.User.objects.create_user(
@@ -56,7 +58,6 @@ class TextQuestionTestCase(QuestionTestCase):
         'question': 'test_question',
         'order': 1,
         'correct_answer': 'some_correct_answer',
-        'form': 1,
     }
 
     @parameterized.expand([
@@ -65,6 +66,7 @@ class TextQuestionTestCase(QuestionTestCase):
     def test_valid_answer(self, correct_answer):
         valid_data = self.get_test_data()
         valid_data['correct_answer'] = correct_answer
+        valid_data['form'] = self.form.pk
         self.valid_create_test(self.list_url, valid_data, api.models.TextQuestion)
 
     @parameterized.expand([
@@ -75,6 +77,7 @@ class TextQuestionTestCase(QuestionTestCase):
         invalid_data['correct_answer'] = correct_answer
         self.invalid_create_test(self.list_url, invalid_data, api.models.TextQuestion)
 
+
 # Since the RadioQuestion and the CheckboxQuestion inherit the list of choices from a single model,
 # we will provide tests on one of them, the RadioQuestion  
 class MultipleChoiceTestCase(QuestionTestCase):
@@ -84,7 +87,6 @@ class MultipleChoiceTestCase(QuestionTestCase):
         'order': 1,
         'choices_list_string': None,
         "correct_answer": "choice_1",
-        "form": 1,
     }
 
     @parameterized.expand([
@@ -115,7 +117,6 @@ class RadioQuestionTestCase(QuestionTestCase):
         'order': 1,
         'choices_list_string': '["choice_1", "choice_2"]',
         "correct_answer": "choice_1",
-        "form": 1,
     }
     
     @parameterized.expand([
@@ -143,7 +144,6 @@ class CheckboxQuestionTestCase(QuestionTestCase):
         'order': 1,
         'choices_list_string': '["choice_1", "choice_2", "choice_3"]',
         'correct_answers_string': '["choice_1", "choice_2"]',
-        'form': 1,
     }
     
     @parameterized.expand([
