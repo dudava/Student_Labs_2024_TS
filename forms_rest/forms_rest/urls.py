@@ -1,4 +1,5 @@
 import django.contrib
+import django.conf
 import django.urls
 import django.views.generic
 
@@ -13,4 +14,10 @@ urlpatterns = [
     django.urls.re_path(r'^accounts/', django.urls.include('rest_framework.urls')),
     django.urls.path('admin/', django.contrib.admin.site.urls),
     django.urls.path('swagger-ui/', schema_view),
+    
 ]
+
+if django.conf.settings.DEBUG:
+    urlpatterns += [
+        django.urls.path('__debug__/', django.urls.include('debug_toolbar.urls')),
+    ]

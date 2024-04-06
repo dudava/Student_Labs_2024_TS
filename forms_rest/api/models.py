@@ -13,7 +13,6 @@ class Question(django.db.models.Model):
     
     class Meta:
         abstract = True
-        ordering = ['order']
 
 
 class MultipleChoicesQuestion(Question):
@@ -41,7 +40,20 @@ class MultipleChoicesQuestion(Question):
         abstract = True
 
 
+class FormManager(django.db.models.Manager):
+    def get_queryset(self):
+        return (
+            super().get_queryset()
+                   .prefetch_related('textquestions')
+                   .prefetch_related('radioquestions')
+                   .prefetch_related('checkboxquestions')
+        )
+
+
+
 class Form(django.db.models.Model):
+    objects = FormManager()
+
     created = django.db.models.DateTimeField(auto_now_add=True)
     title = django.db.models.CharField(max_length=50)
     owner = django.db.models.ForeignKey('auth.User', related_name='forms', on_delete=django.db.models.CASCADE)
@@ -51,6 +63,7 @@ class Form(django.db.models.Model):
             self.textquestions,
             self.radioquestions, self.checkboxquestions
         ]
+
         questions = []
         for q_related in questions_related:
             for question in q_related.all():
