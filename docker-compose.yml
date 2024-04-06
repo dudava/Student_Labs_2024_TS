@@ -12,6 +12,8 @@ services:
       - PG_DB=postgres
       - PG_PORT=5432
       - PG_HOST=db
+      - SECRET_KEY=django-insecure-7m3qn+sjc7)m&@3vg$l5iu=+oa1fw(ffb11%+58tdq+r6dki*)
+      - DEBUG=true
     volumes:
       - ./forms_rest:/usr/src/app
     depends_on:
